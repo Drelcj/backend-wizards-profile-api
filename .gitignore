@@ -1,0 +1,9 @@
+# .gitignore
+
+# Virtual Environment
+venv/
+# Configuration File
+.env
+# Python cache
+__pycache__/
+*.pyc
