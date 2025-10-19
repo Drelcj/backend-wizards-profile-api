@@ -14,6 +14,35 @@ load_dotenv()
 
 app = Flask(__name__)
 
+
+# Fallback message for when the Cat Facts API fails
+FALLBACK_FACT = "A cat fact could not be retrieved at this moment, but cats rule the internet!"
+
+
+# --- Helper Function (Now accepts parameters) ---
+def get_cat_fact(api_url, api_timeout):
+    """
+    Fetches a random cat fact from the Cat Facts API.
+    """
+    try:
+        # Check if URL is present before calling requests
+        if not api_url:
+            raise ValueError("CAT_FACT_API_URL is missing.")
+            
+        response = requests.get(api_url, timeout=api_timeout)
+        response.raise_for_status() 
+        data = response.json()
+        fact = data.get("fact")
+
+        if fact:
+            return fact
+
+    except (requests.exceptions.RequestException, ValueError) as e:
+        print(f"Error fetching cat fact: {e}")
+        return FALLBACK_FACT
+    
+    return FALLBACK_FACT
+
 # --- Configuration ---
 # Get profile data from environment variables
 PROFILE_EMAIL = os.getenv("PROFILE_EMAIL")
@@ -57,36 +86,42 @@ def get_cat_fact():
     return FALLBACK_FACT
 
 
-# --- API Endpoint ---
+# --- API Endpoint (Now fetches all variables inside the function) ---
 @app.route('/me', methods=['GET'])
 def get_profile():
     """
     GET /me endpoint: Returns profile data and a dynamic cat fact.
     """
-    # 1. Fetch the dynamic cat fact
-    fact = get_cat_fact()
+    # CRITICAL FIX: Fetch variables here to ensure they are available
+    # in the running Railway environment.
+    profile_email = os.getenv("PROFILE_EMAIL")
+    profile_name = os.getenv("PROFILE_NAME")
+    profile_stack = os.getenv("PROFILE_STACK")
+    
+    cat_fact_url = os.getenv("CAT_FACT_API_URL")
+    api_timeout = float(os.getenv("API_TIMEOUT", 5.0))
+
+    # 1. Fetch the dynamic cat fact, passing in the environment variables
+    fact = get_cat_fact(cat_fact_url, api_timeout)
 
     # 2. Generate the dynamic timestamp (current UTC time in ISO 8601 format)
-    # The 'Z' at the end of the string represents Zulu time, which is UTC
     timestamp = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
 
-    # 3. Construct the required JSON response structure
+    # 3. Construct the REQUIRED JSON response structure
     response_data = OrderedDict([
         ("status", "success"),
         ("user", {
-            "email": PROFILE_EMAIL,
-            "name": PROFILE_NAME,
-            "stack": PROFILE_STACK
+            "email": profile_email,
+            "name": profile_name,
+            "stack": profile_stack
         }),
         ("timestamp", timestamp),
         ("fact", fact)
     ])
 
     # 4. Return the response using manual JSON serialization (Guarantees Order)
-    # We serialize the OrderedDict to a string, then create a Flask Response
-    # object with the mandatory 'application/json' Content-Type header.
-    json_string = json.dumps(response_data, indent=4) # Use indent=4 for clean local viewing
-
+    json_string = json.dumps(response_data) # Removed indent for production
+    
     return Response(
         response=json_string,
         status=200,
