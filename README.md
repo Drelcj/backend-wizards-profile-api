@@ -84,4 +84,4 @@ To ensure reliable deployment, the environment variables were passed directly in
 Bash
 
 PROFILE_EMAIL="..." PROFILE_NAME="..." PROFILE_STACK="..." CAT_FACT_API_URL="..." API_TIMEOUT="..." gunicorn main:app
-The live endpoint URL is: https://github.com/Drelcj/backend-wizards-profile-api/me
+The live endpoint URL is: https://backend-wizards-profile-api-production.up.railway.app/me
