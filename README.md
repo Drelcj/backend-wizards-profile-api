@@ -32,5 +32,7 @@ These instructions detail how to get a copy of the project running on your local
 ### Step 1: Clone the Repository
 
 ```bash
-git clone <YOUR_REPO_URL>
+git clone <https://github.com/Drelcj/backend-wizards-profile-api >
 cd backend-profile-api
+
+
